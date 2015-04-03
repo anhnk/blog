@@ -52,6 +52,559 @@
       
   <div class="post">
     <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2015-04-03-api-versioning/">
+        API Versioning
+      </a>
+    </h1>
+
+    <span class="post-date">Fri, Apr 3, 2015</span>
+
+    
+
+<p>After Sol is widely used by internal and external parties, an API versioning strategy may be implemented to avoid breaking client applications. This wiki page collects opinions about it and different strategies of API versioning. There is no universally accepted method, nor does any standard specify one.</p>
+
+<h1 id="version-less-api:c91f5c916868d916a8a85ecea760110e">Version-less API</h1>
+
+<p>In an ideal world, after we put out our API to the public, we want backward compatibility on every change we make to the API. Many opinions (including Mike Amundsen&rsquo;s) state that: the best API is a version-less API. Don&rsquo;t do it unless you absolutely MUST.</p>
+
+<h2 id="why-not-use-versioning-for-your-web-api:c91f5c916868d916a8a85ecea760110e">Why not use versioning for your Web API?</h2>
+
+<ul>
+<li>Versioning is an anti-pattern on the web. The web does not work on version. Here&rsquo;s a quick test: What version of browser are you using right now? People don&rsquo;t care about the version. They just see new features. Another test: What version of HTML is the page you just loaded? We don&rsquo;t know, and often we don&rsquo;t care. Even the question &ldquo;What version of Web are you using now?&rdquo; doesn&rsquo;t make sense. On the web, not everyone cares what version they are on. The Web is not the same as the development space. Therefore, don&rsquo;t leak your implementation details to the outside world because nobody cares.</li>
+<li>Versioning is not a feature, but a tool to deal with changes over time. Nobody picks an API because it has more versions.</li>
+</ul>
+
+<h2 id="versioning-is-a-tool-to-deal-with-changes:c91f5c916868d916a8a85ecea760110e">Versioning is a tool to deal with changes</h2>
+
+<p>When things don&rsquo;t change, we don&rsquo;t need versioning. Sounds sweet. But when things change, who wants to know? Those people who are affected by the change. They are the build team, test team, product team, integration team, clients, etc. But different groups have different needs to know about the details level of the change. <a href="http://semver.org/">Semantic Versioning</a> was introduced by Tom Preston-Werner to specify which team will be interested in which level of the change.</p>
+
+<p>M.m.R.B stands for Major, minor, Revision, Build (very similar to semantic versioning). The build team wants to know about any changes to the build number. The test team wants to know what has been added or fixed when a new revision is rolled out. The product team is interested in the minor version; the integration team the major version.</p>
+
+<p>M.m.R (semantic versioning) means:</p>
+
+<ul>
+<li>a revision is a bug fix that doesn&rsquo;t affect existing functionality or break anything</li>
+<li>a minor version is a new feature that doesn&rsquo;t adversely affect existing feature or break anything</li>
+<li>a major version is something that breaks some other functionalities in the system</li>
+</ul>
+
+<p>Semantic versioning makes sense for internal code management because we have lot of bits and pieces put together. Nevertheless, at the Web API level, the level of details of semantic versioning is not helpful and freaks people out. It is an overkill. People only care if it breaks. No breaks, no worries.</p>
+
+<h2 id="how-can-we-change-without-breaking:c91f5c916868d916a8a85ecea760110e">How can we change without breaking?</h2>
+
+<ul>
+<li>Never take stuff away. Don&rsquo;t get rid of an endpoint, a call, a returned value. They have to stay there.</li>
+<li>Never change the meaning of existing stuff. Create something new instead, and let people know about it.</li>
+<li>Make all new stuff optional. If I add a new API endpoint, it should not be required to run.</li>
+</ul>
+
+<p>All these notions is called extending the interface. We can&rsquo;t destroy, but we build on top of it. We always like to have a clean system. We want to treat everything as a greenfield project. We want to destroy all the evidence of things in the past. But we can&rsquo;t do that with the API we have already exposed to the public.</p>
+
+<p>So sometimes we have to break things. How? Create a new version. Versioning is for breaking. And this is the last resort. All the existing clients stay on the old timeline. The new ones can work on the new timeline.</p>
+
+<h1 id="api-versioning-methods:c91f5c916868d916a8a85ecea760110e">API versioning methods</h1>
+
+<p>In most cases, it is recommended that you only use a major version number. A scheme like semantic versioning would be overkill for an API. Additions and backward-compatible changes should not increase the version number.</p>
+
+<h2 id="option-1-change-hostname:c91f5c916868d916a8a85ecea760110e">Option 1: Change hostname</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.v2.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.v2.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="option-2-add-version-to-the-uri-path:c91f5c916868d916a8a85ecea760110e">Option 2: Add version to the URI path</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.lonelyplanet.com/v2/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/v2/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+</tbody>
+</table>
+
+<p>This is by far the most common method. It is fairly straightforward from an initial implementation standpoint. This method usually goes along with deprecating a version when there are too many existing versions to avoid maintenance. Imagine if you had to fix a bug for all versions of the API, and you&rsquo;re already on version ten!</p>
+
+<p>This is the method Mike Amundsen recommends. Simply place the major version number in the URI. Make versions easy to identify, hard to make mistake (ex: new authentication keys). Putting it in the URI is the most usable and the hardest to ignore.</p>
+
+<p>However, there is another opinion on this. Embedding of API version into the URI would disrupt the concept of Hypermedia (stated in Roy T. Fieldings PhD dissertation) by having a resource address/URI that would change over time. How about not change the URI, but add new URI for new version and keep old version as is?</p>
+
+<h2 id="option-3-add-version-to-the-query-parameters:c91f5c916868d916a8a85ecea760110e">Option 3: Add version to the query parameters</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42?version=2">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42?version=2</a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="option-4-passing-a-custom-header:c91f5c916868d916a8a85ecea760110e">Option 4: Passing a custom header</h2>
+
+<p>Example:</p>
+
+<p><code>curl -H &quot;Accepts-version: 2.0&quot; https://api.lonelyplanet.com</code></p>
+
+<h2 id="option-5-specify-a-parameter-in-the-http-accept-header:c91f5c916868d916a8a85ecea760110e">Option 5: Specify a parameter in the HTTP accept header</h2>
+
+<p>Example:</p>
+
+<p><code>Accept: application/vnd.siren+json: version=2</code></p>
+
+<h2 id="option-6-add-version-to-media-type:c91f5c916868d916a8a85ecea760110e">Option 6: Add version to media type</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td>application/vnd.siren+json</td>
+</tr>
+
+<tr>
+<td>New</td>
+<td>application/vnd.sol.v2.siren+json</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="references:c91f5c916868d916a8a85ecea760110e">References</h1>
+
+<p>Mike Amundsen - Designing APIs for the Web
+<a href="http://urthen.github.io/2013/05/09/ways-to-version-your-api/">http://urthen.github.io/2013/05/09/ways-to-version-your-api/</a>
+<a href="http://urthen.github.io/2013/05/16/ways-to-version-your-api-part-2/">http://urthen.github.io/2013/05/16/ways-to-version-your-api-part-2/</a>
+<a href="http://alphahydrae.com/2013/06/rest-and-hypermedia-apis/#api-versioning">http://alphahydrae.com/2013/06/rest-and-hypermedia-apis/#api-versioning</a>
+<a href="http://stackoverflow.com/questions/389169/best-practices-for-api-versioning">http://stackoverflow.com/questions/389169/best-practices-for-api-versioning</a>
+<a href="http://www.lexicalscope.com/blog/2012/03/12/how-are-rest-apis-versioned/">http://www.lexicalscope.com/blog/2012/03/12/how-are-rest-apis-versioned/</a></p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2013-12-14-how-to-sell-a-car-like-a-boss/">
+        How to Sell a Car like a Boss
+      </a>
+    </h1>
+
+    <span class="post-date">Sat, Dec 14, 2013</span>
+
+    <p><em>This is the ad I wrote to sell my car. I got a lot of phone calls to check out the car. It was sold within 10 days. The lucky buyers are two French twin sisters. :)</em></p>
+
+<p>
+<figure >
+    
+        <img src="images/station_wagon.jpg" />
+    
+    
+    <figcaption>
+        <h4>My first car - Commodore Station Wagon</h4>
+        
+    </figcaption>
+    
+</figure>
+</p>
+
+<p>If you are looking to own a car to take a girl on a date&hellip; you have come to the wrong place.</p>
+
+<p>If however, you don&rsquo;t give a damn about your appearance because you are too cool to care, or you are on a low budget, may I present to you, one of the finest feats in Australian engineering: 1999 Holden Commodore VT Wagon.</p>
+
+<p>There is just too much of Australia in this car. My uncle and Mickey his blue heeler used to drive this car to a nearby dog park or dog beach every weekend. Mickey was put down last February and it was too hard for my uncle to continue keeping the car without thinking about Mickey, so he passed it to me. This car has been serviced twice and lovingly cared since then.</p>
+
+<p>There are a few scratches at the front and the back. The air conditioning isn&rsquo;t working. Neither is the door lock. You also won&rsquo;t be able to roll the driver seat window all the way up. Hence the cheap price. The engine has still been a dream.</p>
+
+<p>Purchase of this vehicle will result in a dramatic rise in the number of looks of admiration you get at Bunnings warehouses. I would personally recommend wearing rugged boots, loose jeans, half-open shirt and cowboy hat to truly get desired attention. Also remember not to shave your hairy chest.</p>
+
+<p>No mucking around please. I do really want to sell this car.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2013-01-28-how-to-write-like-a-mad-man/">
+        How to Write Like a Mad Man
+      </a>
+    </h1>
+
+    <span class="post-date">Mon, Jan 28, 2013</span>
+
+    
+
+<p>The first time I started writing daily was when my 4th year teacher suggested me to write a diary. I wrote an A4 page on the 1st day. I used a lot of space to describe the weather, the sky and the people on the street before I talked about what had happened during the day. Gradually, my diary page kept shrinking and shrinking until it became only a sixth of an A4. After all, the weather, the sky and the people were still the same. No need for repetition.</p>
+
+<p>
+<figure >
+    
+        <img src="images/david_ogilvy.jpeg" />
+    
+    
+    <figcaption>
+        <h4>The original Mad Man - David Ogilvy</h4>
+        
+    </figcaption>
+    
+</figure>
+</p>
+
+<p>You might have guessed that I stopped writing my diary in no time. You are right. I did. But I loved keeping a diary. The idea of storing my own thoughts in <em>a box</em> and someday taking them out to look at really excites me. I was discouraged to write often because I didn&rsquo;t know how to do it well enough to make the words <em>sound</em> good later. I have always sucked at literature, history and writing in school.</p>
+
+<p>But at least I tried. It is impossible to remember how many times I started writing a diary/journal again. I feel much easier to write now. The words aren&rsquo;t necessarily poured out, but I don&rsquo;t have to force myself to sit down and open a text editor. Everyday I commute from home to work and vice versa, I sit on the train for total of 40 minutes. 40 minutes/day times 5 days/week, times 52 weeks/year, equals more than 173 hours per year. That amount of time will be well spent on writing, if not reading.</p>
+
+<h1 id="how-to-write:10f7593368bf5f998a6f10ab5c486e4c">How to Write</h1>
+
+<p>On 7 September 1982, David Ogilvy - iconic businessman and original &ldquo;Mad Man&rdquo; - sent to all agency employees the following internal memo, titled &ldquo;How to Write&rdquo;:</p>
+
+<blockquote>
+<p>The better you write, the higher you go in Ogilvy &amp; Mather. People who think well write well.</p>
+
+<p>Woolly-minded people write woolly memos, woolly letters and woolly speeches.</p>
+
+<p>Good writing is not a natural gift. You have to learn to write well. Here are 10 hints:</p>
+
+<ol>
+<li><p>Read the Roman-Raphaelson <a href="http://www.amazon.com/Writing-Works-Communicate-Effectively-Business/dp/0060956437/ref=sr_1_1?ie=UTF8&qid=1359337954&sr=8-1&keywords=writing+that+works" target="_blank">book on writing</a>. Read it three times.</p></li>
+
+<li><p>Write the way you talk. Naturally.</p></li>
+
+<li><p>Use short words, short sentences and short paragraphs.</p></li>
+
+<li><p>Never use jargon words like &lsquo;reconceptualize&rsquo;, &lsquo;demassification&rsquo;, &lsquo;attitudinally&rsquo;, &lsquo;judgmentally&rsquo;. They are hallmarks of a pretentious ass.</p></li>
+
+<li><p>Never write more than two pages on any subject.</p></li>
+
+<li><p>Check your quotations.</p></li>
+
+<li><p>Never send a letter or a memo on the day you write it. Read it aloud the next morning - and then edit it.</p></li>
+
+<li><p>If it is something important, get a colleague to improve it.</p></li>
+
+<li><p>Before you send your letter or your memo, make sure it is crystal clear what you want the recipient to do.</p></li>
+
+<li><p>If you want ACTION, don&rsquo;t write. Go and tell the guy what you want.</p></li>
+</ol>
+
+<p>David</p>
+</blockquote>
+
+<p><a href="http://www.amazon.com/Writing-Works-Communicate-Effectively-Business/dp/0060956437/ref=sr_1_1?ie=UTF8&qid=1359337954&sr=8-1&keywords=writing+that+works" target="_blank"><em>Writing that Works</em></a>, recommended by Ogilvy, is a book on writing in business context. Another one that teaches general writing is <em>The Elements of Style</em>, also known as <em>The Strunk and White</em>.</p>
+
+<h1 id="the-10-000-hour-rule:10f7593368bf5f998a6f10ab5c486e4c">The 10,000 Hour Rule</h1>
+
+<p>It takes approximately 10,000 hours for someone to be good at something. Bill Gates spent about 10,000 hours writing codes before he published his first commercial software. The Beatles also spent that long practicing and playing in a band in bars and nightclubs before they became popular. Bruce Lee once said he feared not the man who had practiced 10,000 kicks once, but the man who had practiced one kick 10,000 times.</p>
+
+<p>Conservatively speaking, if 3 hours is spent on writing everyday, it will take more than 9 years to achieve 10,000 hours. The best time to start writing is NOW.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2013-01-24-new-life-in-melbourne/">
+        New Life in Melbourne
+      </a>
+    </h1>
+
+    <span class="post-date">Thu, Jan 24, 2013</span>
+
+    <p>It has been almost 2 months since I came to Melbourne. I had never been outside Vietnam before, and my 1st overseas trip was to a place 6705.69 km away from my home. That is a long distance. Many people probably never travel that far in their whole lives.</p>
+
+<p>
+<figure >
+    
+        <img src="images/flinders_station.jpg" />
+    
+    
+    <figcaption>
+        <h4>Flinders Street Station</h4>
+        
+    </figcaption>
+    
+</figure>
+</p>
+
+<p>Obviously, culture is an abstract concept. That element of life can be hardly captured. You may hear a lot from stories, read Travel magazines, or watch Travel channels on cable TV; but you will never know what it really is until you experience at first hand. One word. Amazing. I wish I had had a chance to travel abroad when I was younger.</p>
+
+<p>I used to work in American and Australian companies. On a daily basis, I went to meetings with clients from various countries. In business context, however, human interaction rarely goes beyond certain boundaries. You might give them firm handshakes, maintain eye contact with them, or even share life stories in dinners after business meetings; but they will never be the same as fist-bumps with your cousins&rsquo; friends or hugs and air-kisses with girls. People express their emotions and feelings much more strongly here. I see a lot of body movements and facial expressions. People can laugh and talk very loud on the street without worrying that someone will judge or look at them as if they just return from outer space. In short, life cannot be better here.</p>
+
+<p>I arrived during the Xmas holidays. No firms were hiring. Right after the holidays, fortunately, I got a great job and have been working for a few days. The working environment is exactly what I have imagined. Professional, fast-paced, and fun. High five if you also think that most of web development workplaces are like this! I will never regret for quitting my sales and banking job to go back to writing codes. That is the best decision I have made.</p>
+
+<p>2 months is not a long time. I still have a whole journey ahead. It has just been started&hellip;</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2011-06-01-getting-to-yes-part-4-of-4/">
+        Getting to Yes (part 4 of 4)
+      </a>
+    </h1>
+
+    <span class="post-date">Wed, Jun 1, 2011</span>
+
+    <p>The easiest case ever. Here is the background of the case. My client, Ms. Taylor, brought her custom-tailored clothes to Elegance Cleaners for dry cleaning. Unfortunately, their machine destroyed the clothes. Ms. Taylor asked for a compensation of $330 and the counter offer was $80.</p>
+
+<p>My counterpart and I represented as Ms. Taylor and Elegance Cleaners’ lawyers respectively. We both knew each other. In fact, we had good impression on each other before. This helped a lot in the negotiation. Without having to ask many questions, we totally understood our interests, and reached a successful agreement shortly. Why was it considered as a successful agreement? According to GTY, a negotiation is successful when:</p>
+
+<pre><code>1) It leads to wise agreement.
+2) It is efficient. In other words, it doesn’t take so much time or effort.
+3) It enhances a strong relationship.
+</code></pre>
+
+<p>In this case, I did not focus deeply on the money aspect. There were way more things I could get apart from the compensation money. I’d rather talk about our relationship, and Ms. Taylor&rsquo;s desire to go to Elegance Cleaners for dry cleaning service; it was next to her favorite Italian restaurant). Therefore, I proposed a reasonable price for the damage goods and considerable discount for future services. Final agreement is: $120 for compensation and 15% discount for services for 2 years. Both went home happily and felt good about our relationship.</p>
+
+<p>What we had started with was called positions. I wanted $330, and she insisted on $80. By arguing only on our positions, we would definitely destroy our relationship in no time. To avoid doing so, we focused on interests, not positions. And when our relationship was better, listening to her pouring her heart out was a piece of cake. With the malfunctioning machine, she would have to replace a new machine and compensate other clients like me as well. It was impossible for her to pay me what I had asked for. However, on my side, I needed to make sure that I would receive a reasonable compensation. As a consequence, the final solution was that she would pay me a minimal compensation plus discount on the service. This was one way to break down the compensation to mitigate the burden she was facing after the accident.</p>
+
+<p>I cannot emphasize enough how importantly relationship means to negotiation in business transaction. A few months ago, I was looking for a second-hand SONY Walkman MP3 player. After looking around on five.vn - a Vietnamese version of EBay - I called one guy who listed his MP3 player for sale and arranged an appointment at his house. On having small talks with him about his place, I found out he was a Christian. I was a Christian too. A Christian meeting another Christian was like a person meeting his brother. He and I seemed to have known each other for several years. After that, we agreed on the price of the MP3 player without going back and forth many times, and I went home happily with a second-hand MP3 player in a good condition with a guarantee that whenever the MP3 player had any problems he would bring it to SONY Service Center given valid warranty. That was how relationship got me a nice deal. No matter how big and small the deals were, strong relationship sorted all out.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2011-05-07-getting-to-yes-part-3-of-4/">
+        Getting to Yes (part 3 of 4)
+      </a>
+    </h1>
+
+    <span class="post-date">Sat, May 7, 2011</span>
+
+    <p>I hope I will never be in the same situation as this week scenario; and I wish the other team read the book (GTY). Our team were leaders of A-Far, a very poor region suffering from a lack of infrastructure and limited health and educational services. We had a meeting with a team of Footsteps employees on starting up and operating a school in the community of northeastern A-Far.</p>
+
+<p>A few terms needed to be settled. We made a mistake on how to prioritize our interests. We should have started with the money; because monetary term, to A-Far, was much more important than the 5 conditions regarding the operation of the school. Furthermore, we should have listed out all of conditions upfront, and then went through them 1-by-1 from the least to the most difficult.</p>
+
+<p>During the meeting, we struggled a bit at the 5 conditions, but still resolved them. I knew that some of our conditions sounded ridiculous, but we insisted, because A-Far people must follow strictly the rules of Muslim religion and the country’s culture. In negotiation, if we understand more about the other side’s background, culture, religion, and belief - which can never be separated from the people - the requirements/conditions will make sense. It is called <em>putting ourselves in the shoes of the negotiators</em>. Lacking those skills, the other team thought our requirements were so strict that although the negotiation should be conducted in English, they kept yelling in our mother tongue, Vietnamese, that we were too arrogant and too poor to ask for that much. It was extremely unprofessional and insulting. Christians, who the other team was to be in this scenario, would unlikely say such things.</p>
+
+<p>However, even when they did, we would know how to response. Although we were very tempted to fight back, we actually allowed them to let off steam, avoided reacting to their emotional outbursts (GTY), and managed to switch back to our discussion based on objective criteria. Without waiting to be asked, we conveyed our interests lying behind our proposals and also inquired about their interests, so that we could work out the solutions.</p>
+
+<p>Finally, both teams agreed on the 5 conditions, but here came the money issue. The other team used what Fisher and Ury (GTY) called <em>“Dirty Tricks”</em>. They threw personal attacks on us. Sometimes they even reopened the issues that had been closed earlier. According to GTY, if the other side didn’t change their position – neither increases their offer nor decreases their demand – then we shouldn’t change our position either. Otherwise, we were just arguing with/negotiating against ourselves.</p>
+
+<p>In the end, we worked out another solution, and they accepted; yet they were not completely happy about it. They just accepted it because we ran out of time. This negotiation worsens our relationship indeed, both inside and outside the classroom. Later I told them our team didn’t mean to make them feel comfortable, the exercise was too hard and we barely have room to move, hence the inefficient negotiation.</p>
+
+<p>The exercise was difficult indeed, but we learnt so much. On the bright side, if we can handle difficult cases/hard bargainers, we would not be afraid of any other situations.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2011-05-04-getting-to-yes-part-2-of-4/">
+        Getting to Yes (part 2 of 4)
+      </a>
+    </h1>
+
+    <span class="post-date">Wed, May 4, 2011</span>
+
+    <p>Here was the negotiation exercise for this week. Our team, as a group of doctors, had to choose 3 out of 7 patients to receive the H2N2 vaccine. The others would die. We prioritized those seven people based on the following criteria: what influence he/she had on the society and well being of other people, and how importantly his/her life related to others. The challenge was not from the other team but actually from ours. I was unsure of whether we didn’t have the same objective criteria in our minds or we were too stubborn to compromise, but one member disagreed with the rest on the choices despite how hard we tried to persuade her.</p>
+
+<p>After I read more on GTY, I learned a technique that I wished I had known at the moment. It was called “Negotiation Jujitsu”. In a nutshell, if the other side announced a firm position, I might be tempted to criticize and reject it. If she criticized my proposal, I might be tempted to defend it and dig myself in. If she attacked me, I might be tempted to defend myself and counterattack. And by doing these things, I would end up playing the positional bargaining game. What “Negotiation Jujitsu” suggested was:</p>
+
+<pre><code>1) Don’t attack her position, look behind it
+
+2) Don’t defend my ideas, invite criticism and advice
+
+3) Recast an attack on me as an attack on the problem
+
+4) Ask questions and pause
+</code></pre>
+
+<p>Unaware of the above tactic, we actually use a classic yet unsatisfactory policy, <em>“majority wins”</em>, to end our discussion.</p>
+
+<p>On the contrary, the other team was very cooperative. They listened to our arguments and vice versa. Though both teams didn’t have the same choices of whom to be saved, we had great discussions. In fact, we had one choice in common. After our team persuaded them to save one more person from our choices, we were stuck at the last one. However, the negotiation session ended gracefully after our team went for the one they suggested. It was not because they let us save one person from our proposal but because: the last person we saved was the best to fulfill the criteria established during our discussion. Consequently, both parties were pleased with final outcomes without giving in any kind of benefits.</p>
+
+<p>I truly love the idea of separating the people from the problem in negotiation. I myself value long-term relationship and would like to always have win-win situation. From my observation, yet many out there want to take advantages of others as long as they get as much as they want. If only they considered the benefits of long-term relationships, they would do something different and make it easier for everyone.</p>
+
+<p>Last year, I worked as an intern for an Australian company; let&rsquo;s just call it ABC. One-year internship was a mandatory part of my university program at RMIT. For that whole year, ABC managed to squeezed as much as possible out of interns like me, because they knew we couldn’t quit and must finish internships. Finding new companies for interns was hard and we had to present legitimate reasons to quit. Moreover, Vietnam labor laws stand against employees and for employers. What I was able to do at that moment was to work like a dog hoping days would pass by as fast as possible. There was almost nothing to negotiate. Even if there was a chance to negotiate, I had a very weak BATNA: stop working, inform RMIT of the situation, have 3-way discussion (RMIT, ABC, and me), and restart the internship all over again with a new company, if any.</p>
+
+<p>Fortunately, those horrible days finally ended and now I have another job in a good company. They understand I sometimes have classes during working hours, and together we work out my schedule. This is a great example of how people collaborate to solve a problem.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2011-03-23-getting-to-yes-part-1-of-4/">
+        Getting to Yes (part 1 of 4)
+      </a>
+    </h1>
+
+    <span class="post-date">Wed, Mar 23, 2011</span>
+
+    <p>This semester at RMIT, I took a very interesting course, <em>Negotiating Transnational Agreement</em>. Many times in my life, I would need good negotiation skills. I bet a lot of insights would be gained from this course.</p>
+
+<p>In the 2nd week, I had my first team-exercise. We were members of a team of agents representing the Lyric Opera (LO), a local opera house. We would meet a team of agents for a singer named Sally Soprano (SS) who wanted to sing in LO’s next opera. Our team was to negotiate with the other team on the package to pay SS in order to hire her for the primary role of the opera. A lot of information surrounding the case was provided. Choosing which to use was the challenging part of the exercise, since a rule of thumb during a negotiation was <strong>“only give up information about us and our position that will enhance our bargaining power”.</strong></p>
+
+<p>Our team prepared for the negotiation by identifying clearly our Best Alternative To the Negotiated Agreement (BATNA), Reservation Price/Position, and Target/Aspiration Price. If we could not reach the agreement with SS’s agents, our BATNA would be to get the secondary role singer to sing as primary role and pay $28,000 as maximum. Nevertheless, that would be our last choice, and we would do our best to get Sally.</p>
+
+<p>The other team was really tough. According to Thomas-Kilmann Questionnaire, they must have had approached us with competing/forcing style, also known as <strong>sharks style</strong>. There were 5 negotiating styles but none of those was perfectly fit for every situation. I wished I had known which was the best style to deal with <strong>sharks</strong>. Our team decided to use the method of principled negotiation from <a href="http://www.amazon.com/Getting-Yes-Negotiating-Agreement-Without/dp/0140157352/ref=sr_1_1?ie=UTF8&amp;qid=1300873936&amp;sr=8-1-spell">Getting to Yes</a>: insisting on fairness. We discussed about why their offer was unreasonable. With their first offer of $50,000, I knew I could push it under $45,000. As another rule, however, you should never accept the offer too quickly. Therefore, we tried to lower the price. In the middle of the session, I felt we were falling in positional bargaining. I got out of that situation by investigating more on our interests and theirs. Our team wanted to ensure good ticket sales and opera’s reputation, whereas they wanted good salary and reputation as well. As a result, we made them contribute more to the opera’s revenue by dividing the salary into 2 parts: fixed salary and bonus (when sales target was achieved).</p>
+
+<p>Being the first to offer doesn&rsquo;t mean that you can set the price range. In fact, the last one to give a number has an edge in negotiation.  We should have known this better. Besides, we should have requested for a confidentiality agreement: because this is an urgent case, the other party must keep the salary a secret so that we won&rsquo;t overpay other singers in future deals.</p>
+
+<p>Whether to resolve a dispute or negotiate with someone, one of the skills that I always use is listening. It works beautifully; because by listening carefully, I let them know my willingness to collaborate with them to find the solution. Our same opponent is the problem itself, and our mission is to work together to fix it.</p>
+
+<p>Personally, I can’t think of any complaints about this course. It has been more than what I had expected before the semester began. The idea of principled negotiation is so innovative, and it can be applied in every situation.</p>
+
+<p>Bruce Lee once said:</p>
+
+<blockquote>
+<p>I fear not the man who has practiced 10,000 kicks once, but I fear the man who has practiced one kick 10,000 times.</p>
+</blockquote>
+
+<p>I will start practicing this <em>negotiation</em> kick from today.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://anhnk.github.io/blog/post/2011-02-19-the-how-of-happiness/">
+        The How of Happiness – by Sonja Lyubomirsky
+      </a>
+    </h1>
+
+    <span class="post-date">Sat, Feb 19, 2011</span>
+
+    
+
+<p>In <em>The How of Happiness</em>, with thorough research, Sonja Lyubomirsky provides a scientific approach to pursue happiness. This book lifted me up when I was down. Though there are things that lie outside of my Circle of Influence and it is true that there is such a gene called “happiness gene”, I am delighted to know that I can make shots to make me happier, even if I don’t inherit that gene from my parents.</p>
+
+<h1 id="my-notes:4bdce3388941efe26ee730f32648657b">My Notes</h1>
+
+<blockquote>
+<p>It’s never too late to be what you might have been. - George Elliot</p>
+</blockquote>
+
+<h2 id="1-the-40-solution:4bdce3388941efe26ee730f32648657b">1. The 40% Solution</h2>
+
+<p>Becoming lastingly happier demands making some permanent changes that require effort and commitment everyday of your life. Pursuing happiness takes work, but consider that this “happiness work” will be the most rewarding work you’ll ever do.</p>
+
+<p>Subjective Happiness Scale, Depression Scale, Personal-Activity Fit Diagnostic (refer the book)</p>
+
+<p><strong>Myth 1: Happiness must be found.</strong></p>
+
+<p><strong>Myth 2: Happiness lies in changing our circumstances.</strong></p>
+
+<p><strong>Myth 3: You either have it or you don’t.</strong></p>
+
+<h3 id="the-limits-of-life-circumstances:4bdce3388941efe26ee730f32648657b">The limits of life circumstances:</h3>
+
+<ul>
+<li><p>material wealth: Frank Lloyd Wright observed: “Many wealthy people are little more than the janitors of their possessions.” Not only does materialism not bring happiness, but it’s been shown to be a strong predictor of unhappiness.</p></li>
+
+<li><p>beauty.</p></li>
+
+<li><p>The only exception that I would argue is the effects of having children. As a mother of two I can attest that the first time you cuddle with your child, it feels wonderful. The thousandth time, it feels – oh, maybe 95 percent as wonderful.</p></li>
+</ul>
+
+<p>If you’re unhappy with your job, your friends, your marriage, your salary, or your looks, the first step you should take toward reaching greater lasting happiness is to put those things aside in your mind for now. Hard as it is, try not to reflect on them. Keep reminding yourself that these things are really not what is preventing you from getting happier.</p>
+
+<p>If we observe genuinely happy people, we shall find that they do not just sit around being contented. They make things happen. They pursue new understandings, seek new achievements, and control their thoughts and feelings.</p>
+
+<p>Happiness consists in activity. It is a running stream, not a stagnant pool.</p>
+
+<h3 id="five-hows-behind-sustainable-happiness:4bdce3388941efe26ee730f32648657b">Five hows behind sustainable happiness:</h3>
+
+<ul>
+<li><p>Positive Emotion: Happiness consists more in small conveniences or pleasures that occur every day, than in great pieces of good fortune that happen but seldom. – Benjamin Franklin</p></li>
+
+<li><p>Optimal Timing &amp; Variety: How to accomplish this? Through experimentation.</p></li>
+
+<li><p>Social Support.</p></li>
+
+<li><p>Motivation, Effort, and Commitment</p></li>
+
+<li><p>Habit</p></li>
+</ul>
+
+<h3 id="first-i-will-try-the-happiness-activity-3-avoiding-overthinking-and-social-comparison:4bdce3388941efe26ee730f32648657b">First, I will try the Happiness Activity 3: Avoiding Overthinking and Social Comparison</h3>
+
+<ul>
+<li><p>Overthinking is thinking too much, needlessly, passively, endlessly, and excessivly pondering the meanings, causes, and consequences of your character, your feelings, and your problems.</p></li>
+
+<li><p>Many of us believe that when we feel down, we should try to focus inwardly and evaluate our feelings and our situation in order to attain self-insight and find solutions that might ultimately resolve our problems and relieve unhappiness. In fact, studies show that overthinking ushers in a host of adverse consequences.</p></li>
+
+<li><p>You must imitate the behaviour of the happy person and work to break free of overthinking.</p></li>
+
+<li><p>Social Comparison: The happiness people take pleasure in other people’s success and show concern in the face of others’ failure.  Unhappy people are deflated rather than delighted about his peers’ accomplishments and triumphs and are relieved rather than sympathetic in the face of his peers’ failures and undoings.</p></li>
+</ul>
+
+<h2 id="2-how-to-shake-of-ruminations-and-social-comparisons:4bdce3388941efe26ee730f32648657b">2. How to Shake of Ruminations and Social Comparisons</h2>
+
+<ul>
+<li><p>Cut loose:</p>
+
+<ul>
+<li><p>Stop thinking about it. Distract, distract, distract. The distracting activity is what can make you feel happy, curious, peaceful, amused, proud.</p></li>
+
+<li><p>Shout to yourself “STOP!”, “NO!”. Visualize a STOP sign.</p></li>
+
+<li><p>Set aside time for ruminations (deep reflections) later.</p></li>
+
+<li><p>Talk to a sympathetic and trusted person.</p></li>
+
+<li><p>Write out your ruminations.</p></li>
+</ul></li>
+
+<li><p>Act to solve problems: find possible solutions.</p></li>
+
+<li><p>Dodge overthinking triggers: avoid future overthinking traps (places, times, and people)</p></li>
+
+<li><p>Take in a big picture: Ask yourself “Does it matter in a year?”. If no, stop overthinking. If yes, learn the lessons. Don’t sweat the small stuff.</p></li>
+</ul>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="http://anhnk.github.io/blog/post/2011-01-22-over-thinking/">
         Over-thinking is My Kryptonite
       </a>
