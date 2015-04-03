@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title> API Versioning &middot; Anh Do </title>
+
+  
+  <link rel="stylesheet" href="http://anhnk.github.io/blog//css/poole.css">
+  <link rel="stylesheet" href="http://anhnk.github.io/blog//css/syntax.css">
+  <link rel="stylesheet" href="http://anhnk.github.io/blog//css/hyde.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+
+  
+  <link href="" rel="alternate" type="application/rss+xml" title="Anh Do" />
+</head>
+
+<body>
+
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>Anh Do</h1>
+      <p class="lead">
+      Just a little corner of what I think about everyday.
+      </p>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li><a href="/blog">Home</a> </li>
+      
+        <li><a href="/blog/about/"> About </a></li>
+      
+    </ul>
+
+    <p>&copy; 2015. All rights reserved. </p>
+  </div>
+</div>
+
+
+    <div class="content container">
+<div class="post">
+  <h1>API Versioning</h1>
+  <span class="post-date">Fri, Apr 3, 2015</span>
+      
+
+<p>After Sol is widely used by internal and external parties, an API versioning strategy may be implemented to avoid breaking client applications. This wiki page collects opinions about it and different strategies of API versioning. There is no universally accepted method, nor does any standard specify one.</p>
+
+<h1 id="version-less-api:c91f5c916868d916a8a85ecea760110e">Version-less API</h1>
+
+<p>In an ideal world, after we put out our API to the public, we want backward compatibility on every change we make to the API. Many opinions (including Mike Amundsen&rsquo;s) state that: the best API is a version-less API. Don&rsquo;t do it unless you absolutely MUST.</p>
+
+<h2 id="why-not-use-versioning-for-your-web-api:c91f5c916868d916a8a85ecea760110e">Why not use versioning for your Web API?</h2>
+
+<ul>
+<li>Versioning is an anti-pattern on the web. The web does not work on version. Here&rsquo;s a quick test: What version of browser are you using right now? People don&rsquo;t care about the version. They just see new features. Another test: What version of HTML is the page you just loaded? We don&rsquo;t know, and often we don&rsquo;t care. Even the question &ldquo;What version of Web are you using now?&rdquo; doesn&rsquo;t make sense. On the web, not everyone cares what version they are on. The Web is not the same as the development space. Therefore, don&rsquo;t leak your implementation details to the outside world because nobody cares.</li>
+<li>Versioning is not a feature, but a tool to deal with changes over time. Nobody picks an API because it has more versions.</li>
+</ul>
+
+<h2 id="versioning-is-a-tool-to-deal-with-changes:c91f5c916868d916a8a85ecea760110e">Versioning is a tool to deal with changes</h2>
+
+<p>When things don&rsquo;t change, we don&rsquo;t need versioning. Sounds sweet. But when things change, who wants to know? Those people who are affected by the change. They are the build team, test team, product team, integration team, clients, etc. But different groups have different needs to know about the details level of the change. <a href="http://semver.org/">Semantic Versioning</a> was introduced by Tom Preston-Werner to specify which team will be interested in which level of the change.</p>
+
+<p>M.m.R.B stands for Major, minor, Revision, Build (very similar to semantic versioning). The build team wants to know about any changes to the build number. The test team wants to know what has been added or fixed when a new revision is rolled out. The product team is interested in the minor version; the integration team the major version.</p>
+
+<p>M.m.R (semantic versioning) means:</p>
+
+<ul>
+<li>a revision is a bug fix that doesn&rsquo;t affect existing functionality or break anything</li>
+<li>a minor version is a new feature that doesn&rsquo;t adversely affect existing feature or break anything</li>
+<li>a major version is something that breaks some other functionalities in the system</li>
+</ul>
+
+<p>Semantic versioning makes sense for internal code management because we have lot of bits and pieces put together. Nevertheless, at the Web API level, the level of details of semantic versioning is not helpful and freaks people out. It is an overkill. People only care if it breaks. No breaks, no worries.</p>
+
+<h2 id="how-can-we-change-without-breaking:c91f5c916868d916a8a85ecea760110e">How can we change without breaking?</h2>
+
+<ul>
+<li>Never take stuff away. Don&rsquo;t get rid of an endpoint, a call, a returned value. They have to stay there.</li>
+<li>Never change the meaning of existing stuff. Create something new instead, and let people know about it.</li>
+<li>Make all new stuff optional. If I add a new API endpoint, it should not be required to run.</li>
+</ul>
+
+<p>All these notions is called extending the interface. We can&rsquo;t destroy, but we build on top of it. We always like to have a clean system. We want to treat everything as a greenfield project. We want to destroy all the evidence of things in the past. But we can&rsquo;t do that with the API we have already exposed to the public.</p>
+
+<p>So sometimes we have to break things. How? Create a new version. Versioning is for breaking. And this is the last resort. All the existing clients stay on the old timeline. The new ones can work on the new timeline.</p>
+
+<h1 id="api-versioning-methods:c91f5c916868d916a8a85ecea760110e">API versioning methods</h1>
+
+<p>In most cases, it is recommended that you only use a major version number. A scheme like semantic versioning would be overkill for an API. Additions and backward-compatible changes should not increase the version number.</p>
+
+<h2 id="option-1-change-hostname:c91f5c916868d916a8a85ecea760110e">Option 1: Change hostname</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.v2.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.v2.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="option-2-add-version-to-the-uri-path:c91f5c916868d916a8a85ecea760110e">Option 2: Add version to the URI path</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.lonelyplanet.com/v2/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/v2/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+</tbody>
+</table>
+
+<p>This is by far the most common method. It is fairly straightforward from an initial implementation standpoint. This method usually goes along with deprecating a version when there are too many existing versions to avoid maintenance. Imagine if you had to fix a bug for all versions of the API, and you&rsquo;re already on version ten!</p>
+
+<p>This is the method Mike Amundsen recommends. Simply place the major version number in the URI. Make versions easy to identify, hard to make mistake (ex: new authentication keys). Putting it in the URI is the most usable and the hardest to ignore.</p>
+
+<p>However, there is another opinion on this. Embedding of API version into the URI would disrupt the concept of Hypermedia (stated in Roy T. Fieldings PhD dissertation) by having a resource address/URI that would change over time. How about not change the URI, but add new URI for new version and keep old version as is?</p>
+
+<h2 id="option-3-add-version-to-the-query-parameters:c91f5c916868d916a8a85ecea760110e">Option 3: Add version to the query parameters</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42</a></td>
+</tr>
+
+<tr>
+<td>New</td>
+<td><a href="https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42?version=2">https://api.lonelyplanet.com/pois/5bf85d01-420f-465e-a4c6-bc591ddeaa42?version=2</a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="option-4-passing-a-custom-header:c91f5c916868d916a8a85ecea760110e">Option 4: Passing a custom header</h2>
+
+<p>Example:</p>
+
+<p><code>curl -H &quot;Accepts-version: 2.0&quot; https://api.lonelyplanet.com</code></p>
+
+<h2 id="option-5-specify-a-parameter-in-the-http-accept-header:c91f5c916868d916a8a85ecea760110e">Option 5: Specify a parameter in the HTTP accept header</h2>
+
+<p>Example:</p>
+
+<p><code>Accept: application/vnd.siren+json: version=2</code></p>
+
+<h2 id="option-6-add-version-to-media-type:c91f5c916868d916a8a85ecea760110e">Option 6: Add version to media type</h2>
+
+<p>Example:</p>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Old</td>
+<td>application/vnd.siren+json</td>
+</tr>
+
+<tr>
+<td>New</td>
+<td>application/vnd.sol.v2.siren+json</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="references:c91f5c916868d916a8a85ecea760110e">References</h1>
+
+<p>Mike Amundsen - Designing APIs for the Web
+<a href="http://urthen.github.io/2013/05/09/ways-to-version-your-api/">http://urthen.github.io/2013/05/09/ways-to-version-your-api/</a>
+<a href="http://urthen.github.io/2013/05/16/ways-to-version-your-api-part-2/">http://urthen.github.io/2013/05/16/ways-to-version-your-api-part-2/</a>
+<a href="http://alphahydrae.com/2013/06/rest-and-hypermedia-apis/#api-versioning">http://alphahydrae.com/2013/06/rest-and-hypermedia-apis/#api-versioning</a>
+<a href="http://stackoverflow.com/questions/389169/best-practices-for-api-versioning">http://stackoverflow.com/questions/389169/best-practices-for-api-versioning</a>
+<a href="http://www.lexicalscope.com/blog/2012/03/12/how-are-rest-apis-versioned/">http://www.lexicalscope.com/blog/2012/03/12/how-are-rest-apis-versioned/</a></p>
+
+</div>
+</div>
+
+  </body>
+</html>
